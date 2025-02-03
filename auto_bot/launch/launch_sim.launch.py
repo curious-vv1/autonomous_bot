@@ -13,13 +13,16 @@ def generate_launch_description():
     package_name = 'auto_bot'
 
     rsp = IncludeLaunchDescription(PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(
-        package_name), 'launch', 'rsp.launch.py')]), launch_arguments={'use_sim_time': 'true'}.items())
+        package_name), 'launch', 'rsp.launch.py')]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'false'}.items())
+
+    gazebo_params_file = os.path.join(get_package_share_directory(
+        package_name), 'config', 'gazebo_params.yaml')
 
     gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource([os.path.join(
-        get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')]),)
+        get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')]), launch_arguments={'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file}.items())
 
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py', arguments=[
-                        '-topic', 'robot_description', '-entity', 'robot'], output='screen')
+        '-topic', 'robot_description', '-entity', 'robot'], output='screen')
 
     # diff_drive_spawner = TimerAction(
     #     period=5.0,
@@ -38,7 +41,6 @@ def generate_launch_description():
         executable="spawner",
         arguments=["diff_cont"],
     )
-
 
     delayed_diff_drive_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
@@ -69,6 +71,6 @@ def generate_launch_description():
         rsp,
         gazebo,
         spawn_entity,
-        # delayed_diff_drive_spawner,
-        # joint_broad_spawner
+        delayed_diff_drive_spawner,
+        joint_broad_spawner
     ])
